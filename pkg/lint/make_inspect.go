@@ -3,8 +3,31 @@ package lint
 import (
 	"fmt"
 	"go/ast"
+	"go/parser"
 	"go/token"
+	"os"
 )
+
+// InspectFileMakeCalls runs InspectMakeCalls on a file on the filesystem.
+func InspectFileMakeCalls(
+	path string) (lints []ErrMakeSliceWithoutCap, err error) {
+	fileInfo, err := os.Stat(path)
+	if err != nil {
+		return
+	}
+	if fileInfo.IsDir() {
+		err = fmt.Errorf("%s is a directory", path)
+		return
+	}
+
+	fSet := token.NewFileSet()
+	f, err := parser.ParseFile(fSet, path, nil, parser.Mode(0))
+	if err != nil {
+		return
+	}
+	lints = InspectMakeCalls(f, fSet)
+	return
+}
 
 // InspectMakeCalls returns the positions of all incorrect make calls.
 func InspectMakeCalls(
