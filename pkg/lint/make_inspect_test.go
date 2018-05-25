@@ -19,6 +19,12 @@ var _ = make(map[string]string, 2)
 func bar() {
 	x := make([]string, 5)
 	fmt.Println(x)
+	fmt.Println(make([]string, 5))
+
+	y := struct {
+		l []string
+	}{l: make([]string, 2)}
+	fmt.Println(y)
 }
 `
 
@@ -32,6 +38,8 @@ func bar() {
 	expected := []string{
 		"src.go:5:9",
 		"src.go:10:7",
+		"src.go:12:14",
+		"src.go:16:7",
 	}
 
 	actual := make([]string, 0, len(expected))
