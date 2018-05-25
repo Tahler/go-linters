@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"go/ast"
 	"go/token"
-	"os"
 )
 
-// InspectMakeCalls prints the positions of all incorrect make calls to stderr.
-func InspectMakeCalls(f *ast.File, fSet *token.FileSet) {
+// InspectMakeCalls returns the positions of all incorrect make calls.
+func InspectMakeCalls(
+	f *ast.File, fSet *token.FileSet) (errs []ErrMakeSliceWithoutCap) {
 	ast.Inspect(f, func(n ast.Node) bool {
 		fn, isFunction := n.(*ast.CallExpr)
 		if isFunction {
@@ -17,10 +17,8 @@ func InspectMakeCalls(f *ast.File, fSet *token.FileSet) {
 					if len(fn.Args) == 2 {
 						firstArg := fn.Args[0]
 						if _, ok := firstArg.(*ast.ArrayType); ok {
-							fmt.Fprintf(
-								os.Stderr,
-								"%s: make call does not specify both len and cap\n",
-								fSet.Position(fn.Pos()))
+							pos := fSet.Position(fn.Pos())
+							errs = append(errs, ErrMakeSliceWithoutCap{pos})
 						}
 					}
 				}
@@ -29,4 +27,15 @@ func InspectMakeCalls(f *ast.File, fSet *token.FileSet) {
 		shouldCheckChildren := !isFunction
 		return shouldCheckChildren
 	})
+	return
+}
+
+// ErrMakeSliceWithoutCap represents a position in a file which calls make to
+// construct a slice with a length but not a capacity.
+type ErrMakeSliceWithoutCap struct {
+	Pos token.Position
+}
+
+func (e ErrMakeSliceWithoutCap) Error() string {
+	return fmt.Sprintf("%s: make call does not specify both len and cap", e.Pos)
 }

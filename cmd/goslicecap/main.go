@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"go/parser"
 	"go/token"
+	"os"
 
 	"github.com/Tahler/go-linters/pkg/lint"
 )
@@ -32,5 +34,8 @@ func bar() {
 		panic(err)
 	}
 
-	lint.InspectMakeCalls(f, fSet)
+	errs := lint.InspectMakeCalls(f, fSet)
+	for _, err := range errs {
+		fmt.Fprintln(os.Stderr, err.Error())
+	}
 }
