@@ -29,12 +29,16 @@ func bar() {
 		panic(err)
 	}
 
-	expected := []ErrMakeSliceWithoutCap{
-		ErrMakeSliceWithoutCap{fSet.Position(36)},
-		ErrMakeSliceWithoutCap{fSet.Position(138)},
+	expected := []string{
+		"src.go:5:9",
+		"src.go:10:7",
 	}
 
-	actual := InspectMakeCalls(f, fSet)
+	actual := make([]string, 0, len(expected))
+	errs := InspectMakeCalls(f, fSet)
+	for _, err := range errs {
+		actual = append(actual, err.Pos.String())
+	}
 
 	if !reflect.DeepEqual(expected, actual) {
 		t.Errorf("expected %v; actual %v", expected, actual)
