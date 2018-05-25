@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fmt"
-	"go/ast"
 	"go/parser"
 	"go/token"
+
+	"github.com/Tahler/go-linters/pkg/lint"
 )
 
 func main() {
@@ -26,28 +26,11 @@ func bar() {
 `
 
 	// Create the AST by parsing src.
-	fset := token.NewFileSet() // positions are relative to fset
-	f, err := parser.ParseFile(fset, "src.go", src, 0)
+	fSet := token.NewFileSet()
+	f, err := parser.ParseFile(fSet, "src.go", src, parser.Mode(0))
 	if err != nil {
 		panic(err)
 	}
 
-	// Inspect the AST and print all identifiers and literals.
-	ast.Inspect(f, func(n ast.Node) bool {
-		fn, isFunction := n.(*ast.CallExpr)
-		if isFunction {
-			if ident, ok := fn.Fun.(*ast.Ident); ok {
-				if ident.Name == "make" {
-					if len(fn.Args) == 2 {
-						firstArg := fn.Args[0]
-						if _, ok := firstArg.(*ast.ArrayType); ok {
-							fmt.Printf("should have 2 args\n")
-						}
-					}
-				}
-			}
-		}
-		shouldCheckChildren := !isFunction
-		return shouldCheckChildren
-	})
+	lint.InspectMakeCalls(f, fSet)
 }
