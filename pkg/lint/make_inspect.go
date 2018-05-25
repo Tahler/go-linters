@@ -47,8 +47,7 @@ func InspectMakeCalls(
 				}
 			}
 		}
-		shouldCheckChildren := !isFunction
-		return shouldCheckChildren
+		return true
 	})
 	return
 }
